@@ -41,7 +41,7 @@ import type {
  * Клиент JSON SEO API.
  *
  * ```ts
- * const client = new JsonSeoClient('ВАШ_КЛЮЧ');
+ * const client = new JsonSeoClient('YOUR_KEY');
  * const serp = await client.yandex({ text: 'купить ноутбук', region: 213 });
  * ```
  */

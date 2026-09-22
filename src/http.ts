@@ -67,7 +67,7 @@ const KNOWN_OPTIONS = {
 } satisfies Record<keyof ClientOptions, true>;
 
 const KNOWN_OPTION_NAMES = Object.keys(KNOWN_OPTIONS);
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 
 /**
  * Транспорт: собирает запрос, разбирает ответ и решает, повторять ли отказ.
@@ -86,8 +86,21 @@ export class HttpClient {
   private readonly fetchImpl: FetchLike;
 
   constructor(options: ClientOptions) {
-    if (typeof options.apiKey !== 'string' || options.apiKey.trim() === '') {
+    // Обрезаем ровно тот же набор, что и остальные SDK: родной trim в
+    // каждом языке свой, и один ключ принимался бы по-разному.
+    const apiKey = typeof options.apiKey === 'string' ? options.apiKey.replace(/^[ \t\n\r]+|[ \t\n\r]+$/g, '') : '';
+
+    if (apiKey === '') {
       throw new InvalidArgumentError('Нужен API-ключ: возьмите его в личном кабинете на https://jsonseo.ru.');
+    }
+
+    // Заголовок Authorization не переносит не-ASCII и управляющие символы:
+    // с таким ключом он не соберётся, и сервис ответит «токен не
+    // предоставлен» вместо внятной ошибки.
+    if (/[^\x20-\x7E]/.test(apiKey)) {
+      throw new InvalidArgumentError(
+        'API-ключ содержит символы вне ASCII: проверьте, что он скопирован целиком и без лишних знаков.',
+      );
     }
 
     // undefined из спреда частичного конфига — не настройка, а её отсутствие.
@@ -121,7 +134,7 @@ export class HttpClient {
       );
     }
 
-    this.apiKey = options.apiKey.trim();
+    this.apiKey = apiKey;
     this.baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, '');
     this.timeoutMs = options.timeoutMs ?? 300_000;
     this.attempts = options.attempts ?? 3;

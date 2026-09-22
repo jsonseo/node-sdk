@@ -15,7 +15,7 @@ const responses = [
   new Response(JSON.stringify({ balance: 123.45, currency: 'RUB' })),
 ];
 
-const client = new JsonSeoClient('КЛЮЧ-ДЛЯ-ПРОВЕРКИ', {
+const client = new JsonSeoClient('SMOKE-KEY', {
   attempts: 1,
   fetch: async (url, init) => {
     calls.push({ url, params: new URLSearchParams(init.body) });

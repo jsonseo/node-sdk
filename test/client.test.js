@@ -25,6 +25,25 @@ describe('создание клиента', () => {
     assert.throws(() => new JsonSeoClient('KEY', { retries: 2 }), InvalidArgumentError);
   });
 
+  it('не принимает ключ с символами вне ASCII', () => {
+    // Иначе заголовок не соберётся, и сервис ответит «токен не предоставлен».
+    // Второй набор — края строки: там родной trim каждого языка свой, и без
+    // общего набора обрезки эти ключи расходились бы по SDK.
+    const edges = ['\u00a0KEY', '\u2000KEY', '\u0085KEY', 'KEY\u0000', '\u000cKEY', '\u001cKEY', 'KEY\u000b'];
+
+    for (const key of ['КЛЮЧ', 'dead\tbeef', 'dead\u0001beef', 'ключdeadbeef', ...edges]) {
+      assert.throws(() => new JsonSeoClient(key), InvalidArgumentError, `ключ ${JSON.stringify(key)}`);
+    }
+  });
+
+  it('пробелы по краям ключа обрезаются, а не бракуются', async () => {
+    const http = fakeFetch().json({});
+
+    await new JsonSeoClient('  Ab3-_.~xYz09 \n', { fetch: http }).balance();
+
+    assert.equal(http.calls[0].headers.Authorization, 'Bearer Ab3-_.~xYz09');
+  });
+
   it('не принимает нецелое или бессмысленное число попыток', () => {
     // NaN приезжает из Number(process.env.ЧЕГО_НЕТ); без проверки повторы
     // платного запроса не кончались бы никогда.

@@ -23,7 +23,7 @@ bun add jsonseo
 ```ts
 import { JsonSeoClient } from 'jsonseo';
 
-const client = new JsonSeoClient('ВАШ_КЛЮЧ');
+const client = new JsonSeoClient('YOUR_KEY');
 
 const serp = await client.yandex({
   text: 'купить ноутбук',
@@ -462,7 +462,7 @@ try {
 
 ```ts
 const client = new JsonSeoClient({
-  apiKey: 'ВАШ_КЛЮЧ',
+  apiKey: 'YOUR_KEY',
   baseUrl: 'https://jsonseo.ru/api', // адрес API
   timeoutMs: 300_000,                // сколько ждать ответа на одну попытку
   attempts: 3,                       // всего попыток, вместе с первой
