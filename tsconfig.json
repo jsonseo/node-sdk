@@ -15,6 +15,10 @@
     "skipLibCheck": true,
     "rootDir": "./src",
     "declaration": true,
+    // Сборка идёт только через tsconfig.build.json и tsconfig.cjs.json:
+    // без этого голый `tsc` разложил бы .js и .d.ts прямо рядом с
+    // исходниками, где они тихо устаревают.
+    "noEmit": true,
     "removeComments": false
   },
   "include": ["src"]
