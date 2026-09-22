@@ -495,12 +495,15 @@ await client.yandex('купить ноутбук', { signal: controller.signal, 
 
 ```bash
 npm install
-npm test          # сборка и тесты на node:test
+npm test             # сборка и тесты на node:test
 npm run typecheck
-npm run smoke     # проверка собранного пакета: node scripts/smoke.mjs или bun scripts/smoke.mjs
+npm run smoke        # проверка собранного пакета в текущей среде
+npm run check:consumer   # собранный пакет ставится в чистый проект и типизуется
 ```
 
-Тесты идут без сети: `fetch` подменяется заглушкой.
+Тесты идут без сети: `fetch` подменяется заглушкой. Тот же набор гоняется
+и в Bun (`bun test test/`), и в Deno (`deno test --allow-all --no-check`),
+на Linux, macOS и Windows.
 
 # Лицензия
 

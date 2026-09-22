@@ -55,6 +55,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test test/client.test.js test/errors.test.js test/package.test.js test/params.test.js test/retry.test.js",
     "smoke": "node scripts/smoke.mjs",
+    "check:consumer": "node scripts/check-consumer.mjs",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {

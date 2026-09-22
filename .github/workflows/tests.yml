@@ -7,7 +7,9 @@ on:
 
 jobs:
   node:
-    runs-on: ubuntu-latest
+    name: Node ${{ matrix.node }} / ${{ matrix.os }}
+
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
@@ -15,8 +17,16 @@ jobs:
         # 18 — нижняя граница: с неё fetch есть без флагов. Дальше все
         # живые ветки, включая текущую.
         node: ['18', '20', '22', '24', '26']
-
-    name: Node ${{ matrix.node }}
+        os: [ubuntu-latest]
+        # Крайние версии гоняем ещё и на других системах: пути, переводы
+        # строк и сокеты там ведут себя по-своему.
+        include:
+          - node: '18'
+            os: windows-latest
+          - node: '26'
+            os: windows-latest
+          - node: '26'
+            os: macos-latest
 
     steps:
       - uses: actions/checkout@v7
@@ -32,8 +42,14 @@ jobs:
       - run: npm run smoke
 
   bun:
-    runs-on: ubuntu-latest
-    name: Bun
+    name: Bun / ${{ matrix.os }}
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v7
@@ -44,17 +60,25 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
-      # Сборку делает tsc, а проверку — сам Bun: так видно, что собранный
-      # пакет в нём работает, а не только устанавливается.
+      # Сборку делает tsc, а тесты — родной раннер Bun: так проверяется
+      # не «пакет ставится», а что все 69 тестов в нём проходят.
       - run: npm install
 
       - run: npm run build
 
+      - run: bun test test/
+
       - run: bun scripts/smoke.mjs
 
   deno:
-    runs-on: ubuntu-latest
-    name: Deno
+    name: Deno / ${{ matrix.os }}
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v7
@@ -71,5 +95,38 @@ jobs:
 
       - run: npm run build
 
-      # Deno заявлен в README наравне с Node и Bun — значит, проверяется так же.
+      # --no-check: типы проверяет tsc на сборке, Deno здесь отвечает
+      # за поведение в своём рантайме.
+      - run: deno test --allow-all --no-check test/client.test.js test/errors.test.js test/package.test.js test/params.test.js test/retry.test.js
+
       - run: deno run --allow-env scripts/smoke.mjs
+
+  consumer:
+    name: Типы у потребителя (TS ${{ matrix.typescript }}, ${{ matrix.resolution }})
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        typescript: ['5', '7']
+        resolution: [node16, bundler, node10]
+        exclude:
+          # node10 убран в TypeScript 7.
+          - typescript: '7'
+            resolution: node10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - run: npm install
+
+      # Собранный пакет ставится в чистый проект и типизуется из .cts и
+      # .mts: битые типы для require иначе всплыли бы только у клиента.
+      - run: npm run build
+
+      - run: node scripts/check-consumer.mjs ${{ matrix.typescript }} ${{ matrix.resolution }}
