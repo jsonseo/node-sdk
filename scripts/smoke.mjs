@@ -16,7 +16,7 @@ const responses = [
 ];
 
 const client = new JsonSeoClient('КЛЮЧ-ДЛЯ-ПРОВЕРКИ', {
-  retries: 0,
+  attempts: 1,
   fetch: async (url, init) => {
     calls.push({ url, params: new URLSearchParams(init.body) });
 

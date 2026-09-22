@@ -24,8 +24,8 @@ export interface ClientOptions {
   baseUrl?: string;
   /** Сколько ждать ответа на одну попытку. По умолчанию 300 000 мс. */
   timeoutMs?: number;
-  /** Сколько раз повторять временный отказ. По умолчанию 2. */
-  retries?: number;
+  /** Сколько всего попыток у запроса, включая первую. По умолчанию 3. */
+  attempts?: number;
   /** Стартовая пауза между попытками, миллисекунд. По умолчанию 1000. */
   retryDelayMs?: number;
   /**
@@ -50,6 +50,23 @@ export interface RequestOptions {
 }
 
 const DEFAULT_BASE_URL = 'https://jsonseo.ru/api';
+/**
+ * Ключи проверяются типом: забытая здесь настройка из ClientOptions
+ * отвергалась бы у пользователя как незнакомая.
+ */
+const KNOWN_OPTIONS = {
+  apiKey: true,
+  baseUrl: true,
+  timeoutMs: true,
+  attempts: true,
+  retryDelayMs: true,
+  maxRetryDelayMs: true,
+  auth: true,
+  userAgent: true,
+  fetch: true,
+} satisfies Record<keyof ClientOptions, true>;
+
+const KNOWN_OPTION_NAMES = Object.keys(KNOWN_OPTIONS);
 const VERSION = '1.0.0';
 
 /**
@@ -61,7 +78,7 @@ export class HttpClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
-  private readonly retries: number;
+  private readonly attempts: number;
   private readonly retryDelayMs: number;
   private readonly maxRetryDelayMs: number;
   private readonly auth: AuthMode;
@@ -71,6 +88,25 @@ export class HttpClient {
   constructor(options: ClientOptions) {
     if (typeof options.apiKey !== 'string' || options.apiKey.trim() === '') {
       throw new InvalidArgumentError('Нужен API-ключ: возьмите его в личном кабинете на https://jsonseo.ru.');
+    }
+
+    // undefined из спреда частичного конфига — не настройка, а её отсутствие.
+    const unknown = Object.keys(options).filter(
+      (name) => !KNOWN_OPTION_NAMES.includes(name) && options[name as keyof ClientOptions] !== undefined,
+    );
+
+    if (unknown.length > 0) {
+      throw new InvalidArgumentError(
+        `Неизвестные настройки клиента: ${unknown.join(', ')}. Доступны: ${KNOWN_OPTION_NAMES.join(', ')}.`,
+      );
+    }
+
+    // NaN сюда приезжает из Number(process.env.ЧЕГО_НЕТ), и без проверки
+    // сравнение с ним всегда ложно — повторы платного запроса не кончались бы.
+    if (options.attempts !== undefined && (!Number.isInteger(options.attempts) || options.attempts < 1)) {
+      throw new InvalidArgumentError(
+        `Настройка attempts ожидает целое число не меньше 1, получено: ${String(options.attempts)}.`,
+      );
     }
 
     if (options.auth !== undefined && options.auth !== 'header' && options.auth !== 'query') {
@@ -88,7 +124,7 @@ export class HttpClient {
     this.apiKey = options.apiKey.trim();
     this.baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, '');
     this.timeoutMs = options.timeoutMs ?? 300_000;
-    this.retries = Math.max(0, options.retries ?? 2);
+    this.attempts = options.attempts ?? 3;
     this.retryDelayMs = options.retryDelayMs ?? 1_000;
     this.maxRetryDelayMs = options.maxRetryDelayMs ?? 30_000;
     this.auth = options.auth ?? 'header';
@@ -155,7 +191,7 @@ export class HttpClient {
           error instanceof NetworkError &&
           !(error instanceof TimeoutError) &&
           !(error instanceof IncompleteResponseError) &&
-          attempt < this.retries
+          !this.isLastAttempt(attempt)
         ) {
           try {
             await sleep(this.backoff(attempt), options?.signal);
@@ -182,7 +218,7 @@ export class HttpClient {
       // Проснуться раньше названного срока — снова получить тот же отказ.
       // Ждать дольше потолка не станем: отдаём ошибку.
       if (
-        attempt >= this.retries ||
+        this.isLastAttempt(attempt) ||
         !isRetryable(response.status) ||
         (retryAfter !== null && retryAfter * 1000 > this.maxRetryDelayMs)
       ) {
@@ -281,6 +317,11 @@ export class HttpClient {
       clearTimeout(timer);
       external?.removeEventListener('abort', forward);
     }
+  }
+
+  /** Попытки нумеруются с нуля: при attempts = 3 последняя — вторая. */
+  private isLastAttempt(attempt: number): boolean {
+    return attempt + 1 >= this.attempts;
   }
 
   /**

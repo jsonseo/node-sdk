@@ -21,6 +21,28 @@ describe('создание клиента', () => {
     assert.equal(http.calls[0].headers.Authorization, 'Bearer KEY');
   });
 
+  it('не принимает незнакомую настройку', () => {
+    assert.throws(() => new JsonSeoClient('KEY', { retries: 2 }), InvalidArgumentError);
+  });
+
+  it('не принимает нецелое или бессмысленное число попыток', () => {
+    // NaN приезжает из Number(process.env.ЧЕГО_НЕТ); без проверки повторы
+    // платного запроса не кончались бы никогда.
+    for (const attempts of [Number.NaN, 0, -5, 2.5, Number.POSITIVE_INFINITY]) {
+      assert.throws(
+        () => new JsonSeoClient('KEY', { fetch: fakeFetch(), attempts }),
+        InvalidArgumentError,
+        `attempts = ${attempts} должно отвергаться`,
+      );
+    }
+  });
+
+  it('пустая настройка из частичного конфига не считается незнакомой', () => {
+    const partial = { proxy: undefined };
+
+    assert.doesNotThrow(() => new JsonSeoClient('KEY', { fetch: fakeFetch(), ...partial }));
+  });
+
   it('не принимает незнакомый способ авторизации', () => {
     assert.throws(() => client(fakeFetch(), { auth: 'cookie' }), InvalidArgumentError);
   });

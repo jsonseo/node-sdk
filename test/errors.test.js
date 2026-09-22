@@ -14,7 +14,7 @@ import { fakeFetch } from './helpers.js';
 
 /** Повторы выключены: здесь проверяется разбор отказа, а не поведение при нём. */
 function client(fetchImpl) {
-  return new JsonSeoClient('KEY', { fetch: fetchImpl, retries: 0 });
+  return new JsonSeoClient('KEY', { fetch: fetchImpl, attempts: 1 });
 }
 
 describe('ошибки сервиса', () => {

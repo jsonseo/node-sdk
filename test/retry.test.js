@@ -52,13 +52,41 @@ describe('повторы', () => {
     assert.equal(http.calls.length, 2);
   });
 
-  it('повторы кончаются на заданном числе', async () => {
+  /** По умолчанию у запроса три попытки: одна основная и две повторных. */
+  it('три попытки по умолчанию', async () => {
+    const http = fakeFetch()
+      .json({ message: 'Сервис временно недоступен.' }, 503)
+      .json({ message: 'Сервис временно недоступен.' }, 503)
+      .json({ message: 'Сервис временно недоступен.' }, 503)
+      .json({ results: ['лишний'] });
+
+    // Настройку не трогаем: проверяется именно значение по умолчанию.
+    const api = new JsonSeoClient('KEY', { fetch: http, retryDelayMs: 0, maxRetryDelayMs: 0 });
+
+    await assert.rejects(() => api.yandex('тест'), ServiceUnavailableError);
+    assert.equal(http.calls.length, 3);
+  });
+
+  /** Затупивший сервис успевает ответить с третьей попытки. */
+  it('медленный сервис отвечает на поздней попытке', async () => {
+    const http = fakeFetch()
+      .json({ message: 'Сервис временно недоступен.' }, 503)
+      .json({ message: 'Сервис временно недоступен.' }, 503)
+      .json({ results: ['ok'] });
+
+    const serp = await client(http).yandex('тест');
+
+    assert.deepEqual(serp.results, ['ok']);
+    assert.equal(http.calls.length, 3);
+  });
+
+  it('попытки кончаются на заданном числе', async () => {
     const http = fakeFetch()
       .json({ message: 'Too Many Attempts.' }, 429)
       .json({ message: 'Too Many Attempts.' }, 429)
       .json({ message: 'Too Many Attempts.' }, 429);
 
-    await assert.rejects(() => client(http, { retries: 2 }).yandex('тест'), RateLimitError);
+    await assert.rejects(() => client(http, { attempts: 3 }).yandex('тест'), RateLimitError);
     assert.equal(http.calls.length, 3);
   });
 
@@ -76,10 +104,10 @@ describe('повторы', () => {
     assert.equal(http.calls.length, 1);
   });
 
-  it('повторы можно выключить', async () => {
+  it('одна попытка означает отсутствие повторов', async () => {
     const http = fakeFetch().fail('сеть недоступна');
 
-    await assert.rejects(() => client(http, { retries: 0 }).yandex('тест'), NetworkError);
+    await assert.rejects(() => client(http, { attempts: 1 }).yandex('тест'), NetworkError);
     assert.equal(http.calls.length, 1);
   });
 
@@ -201,7 +229,7 @@ describe('отмена запроса', () => {
     const http = fakeFetch().hang();
 
     await assert.rejects(
-      () => client(http, { timeoutMs: 60_000, retries: 0 }).yandex('тест', { timeoutMs: 20 }),
+      () => client(http, { timeoutMs: 60_000, attempts: 1 }).yandex('тест', { timeoutMs: 20 }),
       TimeoutError,
     );
   });
