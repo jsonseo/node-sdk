@@ -1,22 +1,15 @@
-/**
- * Общий предок всех ошибок SDK: ловите его, если разбирать причину не
- * нужно, — ни одна ошибка библиотеки мимо него не пройдёт.
- */
+/** Общий предок всех ошибок SDK. */
 export class JsonSeoError extends Error {
   constructor(message: string, options?: { cause?: unknown }) {
     super(message, options);
     this.name = new.target.name;
 
-    // Без этого instanceof ломается в сборках под ES5: цепочка прототипов
-    // после наследования от Error там восстанавливается вручную.
+    // Иначе instanceof ломается в сборках под ES5.
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
-/**
- * Сервис ответил, но отказом. Сообщение берётся из поля message ответа,
- * тело сохраняется целиком — в нём бывают подробности, которых нет в тексте.
- */
+/** Сервис ответил отказом. Тело сохраняется целиком. */
 export class JsonSeoApiError extends JsonSeoError {
   /** HTTP-статус ответа. */
   readonly status: number;
@@ -27,10 +20,7 @@ export class JsonSeoApiError extends JsonSeoError {
   /** Разобранный JSON ответа. Пустой объект, если тело не разобралось. */
   readonly payload: Record<string, unknown>;
 
-  /**
-   * Через сколько секунд сервис разрешает вернуться. null, если срок не
-   * назван. Заголовок приходит не только с 429: им сопровождается и 503.
-   */
+  /** Через сколько секунд вернуться. null, если срок не назван. */
   readonly retryAfter: number | null;
 
   constructor(
@@ -48,21 +38,18 @@ export class JsonSeoApiError extends JsonSeoError {
   }
 }
 
-/** 402: на счёте не хватает средств. Повторять запрос бессмысленно. */
+/** 402: на счёте не хватает средств. */
 export class PaymentRequiredError extends JsonSeoApiError {}
 
-/** 403: ключ не передан или недействителен. */
+/** 403 или 401: ключ не передан или недействителен. */
 export class UnauthorizedError extends JsonSeoApiError {}
 
-/** 503: выдачу получить не вышло. Деньги не списываются, повтор обычно проходит. */
+/** 503: выдачу получить не вышло. Деньги не списаны, повтор обычно проходит. */
 export class ServiceUnavailableError extends JsonSeoApiError {}
 
 /** 422: параметры запроса не приняты. Деньги не списываются. */
 export class ValidationError extends JsonSeoApiError {
-  /**
-   * Ошибки по именам параметров: `{ text: ['Введите запрос'] }`.
-   * Пустой объект, если сервис прислал только общее сообщение.
-   */
+  /** Ошибки по именам параметров: `{ text: ['Введите запрос'] }`. */
   get errors(): Record<string, string[]> {
     const raw = this.payload.errors;
 
@@ -79,25 +66,18 @@ export class ValidationError extends JsonSeoApiError {
     return errors;
   }
 
-  /** Имена параметров, которые сервис забраковал. */
+  /** Забракованные параметры. */
   get fields(): string[] {
     return Object.keys(this.errors);
   }
 }
 
-/**
- * 429: превышен один из лимитов частоты. Деньги не списываются, запрос
- * можно повторить — через сколько, сказано в поле `retryAfter`.
- */
+/** 429: превышен лимит частоты. Срок повтора — в `retryAfter`. */
 export class RateLimitError extends JsonSeoApiError {}
 
-/**
- * До сервиса не достучались: сеть, DNS, TLS, оборванное соединение.
- * Ответа нет, поэтому и статуса нет — отличается этим от JsonSeoApiError.
- */
+/** До сервиса не достучались: сеть, DNS, TLS. Статуса нет. */
 export class NetworkError extends JsonSeoError {
   constructor(message: string, cause?: unknown) {
-    // Исходная ошибка fetch остаётся в штатном поле cause.
     super(message, { cause });
   }
 }
@@ -106,12 +86,8 @@ export class NetworkError extends JsonSeoError {
 export class TimeoutError extends NetworkError {}
 
 /**
- * Соединение оборвалось посреди тела: заголовки пришли, а ответ дочитать
- * не вышло.
- *
- * Такой запрос не повторяется автоматически: сервис успел собрать выдачу и
- * списать за неё деньги — обрыв случился уже на отдаче, и второй заход стоил
- * бы ещё раз. Повторять или нет, решает вызывающий.
+ * Заголовки пришли, а тело дочитать не вышло. Автоматически не повторяется:
+ * выдача уже собрана и оплачена, обрыв случился на отдаче.
  */
 export class IncompleteResponseError extends NetworkError {}
 
@@ -122,9 +98,8 @@ export class AbortError extends JsonSeoError {}
 export class InvalidArgumentError extends JsonSeoError {}
 
 /**
- * Сервис ответил успехом, но тело не разобралось как JSON — так выглядит
- * подменённый прокси ответ. Тело сохраняется целиком: страница выдачи уже
- * оплачена, и вытащить из неё данные руками лучше, чем не иметь ничего.
+ * Успех, но тело не разобралось как JSON. Тело сохраняется: страница уже
+ * оплачена, и достать из неё данные руками лучше, чем не иметь ничего.
  */
 export class ParseError extends JsonSeoError {
   /** Тело ответа как есть. */
@@ -137,7 +112,7 @@ export class ParseError extends JsonSeoError {
 }
 
 /**
- * Собирает ошибку того класса, который отвечает за этот HTTP-статус.
+ * Собирает ошибку под этот HTTP-статус.
  *
  * @internal
  */

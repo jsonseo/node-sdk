@@ -13,8 +13,7 @@ const queries = ['купить ноутбук', 'ноутбук недорого
 
 for (const query of queries) {
   try {
-    // break_domain останавливает поиск на нужном домене: платить за страницы
-    // ниже найденной позиции незачем.
+    // break_domain останавливает поиск: платить за страницы ниже незачем.
     const serp = await client.yandex({
       text: query,
       region: 213,
@@ -22,9 +21,8 @@ for (const query of queries) {
       break_domain: domain,
     });
 
-    // Сравнивать домены напрямую нельзя: выдача отдаёт их вместе с
-    // поддоменом, и example.com не совпал бы с www.example.com — хотя это
-    // один и тот же сайт.
+    // Сравнивать домены напрямую нельзя: выдача отдаёт их с поддоменом,
+    // и example.com не совпал бы с www.example.com.
     const position = serp.results.findIndex((result) => {
       const found = result.domain.toLowerCase();
 

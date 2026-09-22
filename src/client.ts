@@ -56,132 +56,88 @@ export class JsonSeoClient {
 
   // Яндекс
 
-  /**
-   * Органическая выдача Яндекса. По умолчанию мобильная, регион 213 (Москва).
-   * Стоимость: 0.01 ₽ за страницу.
-   */
+  /** Органическая выдача Яндекса: мобильная, регион 213. 0.01 ₽ за страницу. */
   async yandex(params: string | YandexSearchParams, options?: RequestOptions): Promise<SearchResponse> {
     return this.http.json('yandex', primary(params, 'text'), options);
   }
 
-  /**
-   * Поисковые подсказки Яндекса: до 50 фраз без персонализации, с учётом
-   * региона. Стоимость: 0.01 ₽ за запрос.
-   */
+  /** Подсказки Яндекса: до 50 фраз с учётом региона. 0.01 ₽ за запрос. */
   async yandexSuggest(params: string | YandexSuggestParams, options?: RequestOptions): Promise<SuggestResponse> {
     return this.http.json('yandex/suggest', primary(params, 'text'), options);
   }
 
-  /**
-   * Справочник регионов: код региона (lr) по названию города или области.
-   * Бесплатно, но ключ обязателен — по нему считается лимит.
-   */
+  /** Код региона (lr) по названию города или области. Бесплатно, нужен ключ. */
   async yandexRegions(params: string | RegionsParams, options?: RequestOptions): Promise<YandexRegionsResponse> {
     return this.http.json('yandex/regions', primary(params, 'name'), options);
   }
 
-  /**
-   * Поиск по картинкам. Страница вертикали — 20 карточек.
-   * Стоимость: 0.01 ₽ за страницу.
-   */
+  /** Картинки Яндекса: 20 карточек на страницу, 0.01 ₽ за страницу. */
   async yandexImages(params: string | YandexImagesParams, options?: RequestOptions): Promise<ImagesResponse> {
     return this.http.json('yandex/images', primary(params, 'q'), options);
   }
 
-  /**
-   * Поиск по видео. Страница вертикали — 20 карточек.
-   * Стоимость: 0.01 ₽ за страницу.
-   */
+  /** Видео Яндекса: 20 карточек на страницу, 0.01 ₽ за страницу. */
   async yandexVideo(params: string | YandexVideoParams, options?: RequestOptions): Promise<VideoResponse> {
     return this.http.json('yandex/video', primary(params, 'q'), options);
   }
 
   // Google
 
-  /**
-   * Органическая выдача google.com. По умолчанию мобильная.
-   * Стоимость: 0.01 ₽ за страницу.
-   */
+  /** Органическая выдача google.com: мобильная, 0.01 ₽ за страницу. */
   async google(params: string | GoogleSearchParams, options?: RequestOptions): Promise<SearchResponse> {
     return this.http.json('google', primary(params, 'q'), options);
   }
 
-  /**
-   * Подсказки Google (autocomplete): до ~15 фраз без персонализации.
-   * Стоимость: 0.01 ₽ за запрос.
-   */
+  /** Подсказки Google: до ~15 фраз. 0.01 ₽ за запрос. */
   async googleSuggest(params: string | GoogleSuggestParams, options?: RequestOptions): Promise<SuggestResponse> {
     return this.http.json('google/suggest', primary(params, 'q'), options);
   }
 
-  /**
-   * Справочник регионов Google: числовой ID по названию и готовый `uule`.
-   * Бесплатно, ключ обязателен.
-   */
+  /** ID региона Google по названию и готовый `uule`. Бесплатно, нужен ключ. */
   async googleRegions(params: string | RegionsParams, options?: RequestOptions): Promise<GoogleRegionsResponse> {
     return this.http.json('google/regions', primary(params, 'name'), options);
   }
 
-  /**
-   * Поиск по картинкам. Страница вертикали — 100 карточек.
-   * Стоимость: 0.01 ₽ за страницу.
-   */
+  /** Картинки Google: 100 карточек на страницу, 0.01 ₽ за страницу. */
   async googleImages(params: string | GoogleImagesParams, options?: RequestOptions): Promise<ImagesResponse> {
     return this.http.json('google/images', primary(params, 'q'), options);
   }
 
-  /**
-   * Поиск по видео. Страница вертикали — 10 карточек.
-   * Стоимость: 0.01 ₽ за страницу.
-   */
+  /** Видео Google: 10 карточек на страницу, 0.01 ₽ за страницу. */
   async googleVideo(params: string | GoogleVideoParams, options?: RequestOptions): Promise<VideoResponse> {
     return this.http.json('google/video', primary(params, 'q'), options);
   }
 
   // Bing
 
-  /**
-   * Органическая выдача bing.com. Без параметров локации — выдача по России.
-   * Стоимость: 0.01 ₽ за страницу.
-   */
+  /** Органическая выдача bing.com: без локации — Россия, 0.01 ₽ за страницу. */
   async bing(params: string | BingSearchParams, options?: RequestOptions): Promise<SearchResponse> {
     return this.http.json('bing', primary(params, 'q'), options);
   }
 
-  /** Подсказки Bing (autocomplete). Стоимость: 0.01 ₽ за запрос. */
+  /** Подсказки Bing. 0.01 ₽ за запрос. */
   async bingSuggest(params: string | BingSuggestParams, options?: RequestOptions): Promise<SuggestResponse> {
     return this.http.json('bing/suggest', primary(params, 'q'), options);
   }
 
-  /**
-   * Поиск по картинкам. Страница вертикали — `count` карточек, по умолчанию
-   * 35. Дальше 700-й карточки Bing не листает.
-   */
+  /** Картинки Bing: `count` карточек (по умолчанию 35), дальше 700-й не листает. */
   async bingImages(params: string | BingImagesParams, options?: RequestOptions): Promise<ImagesResponse> {
     return this.http.json('bing/images', primary(params, 'q'), options);
   }
 
-  /**
-   * Поиск по видео. Страница вертикали — `count` карточек, по умолчанию 105.
-   */
+  /** Видео Bing: `count` карточек на страницу, по умолчанию 105. */
   async bingVideo(params: string | BingVideoParams, options?: RequestOptions): Promise<VideoResponse> {
     return this.http.json('bing/video', primary(params, 'q'), options);
   }
 
   // Вордстат
 
-  /**
-   * Списки популярных и похожих запросов — материал для расширения
-   * семантики. Стоимость: 0.01 ₽ за запрос.
-   */
+  /** Популярные и похожие запросы. 0.01 ₽ за запрос. */
   async wordstat(params: string | WordstatParams, options?: RequestOptions): Promise<WordstatResponse> {
     return this.http.json('wordstat', primary(params, 'text'), options);
   }
 
-  /**
-   * Частота запроса одним числом — `results.totalValue`.
-   * Стоимость: 0.01 ₽ за запрос.
-   */
+  /** Частота запроса одним числом — `results.totalValue`. 0.01 ₽ за запрос. */
   async wordstatFrequency(
     params: string | WordstatParams,
     options?: RequestOptions,
@@ -189,18 +145,14 @@ export class JsonSeoClient {
     return this.http.json('wordstat/frequency', primary(params, 'text'), options);
   }
 
-  /**
-   * Динамика показов по месяцам, неделям или дням — сезонность и тренд.
-   * Стоимость: 0.01 ₽ за запрос.
-   */
+  /** Динамика показов по месяцам, неделям или дням. 0.01 ₽ за запрос. */
   async wordstatGraph(params: string | WordstatGraphParams, options?: RequestOptions): Promise<WordstatGraphResponse> {
     return this.http.json('wordstat/graph', primary(params, 'text'), options);
   }
 
   /**
-   * Распределение показов по регионам и городам. `popularity` — это
-   * affinity-индекс: 100 — средний интерес, выше — повышенный.
-   * Стоимость: 0.01 ₽ за запрос.
+   * Показы по регионам и городам. `popularity` — affinity-индекс: 100 —
+   * средний интерес. 0.01 ₽ за запрос.
    */
   async wordstatMap(params: string | WordstatMapParams, options?: RequestOptions): Promise<WordstatMapResponse> {
     return this.http.json('wordstat/map', primary(params, 'text'), options);
@@ -209,12 +161,10 @@ export class JsonSeoClient {
   // Директ и служебные методы
 
   /**
-   * Прогноз показов Яндекс Директа со ставками и бюджетом по местам
-   * аукциона. Рекламный кабинет не нужен.
+   * Прогноз показов Директа со ставками и бюджетом. Кабинет не нужен.
    *
-   * Стоимость: 0.01 ₽ за пачку фраз до 4000 символов — около 150 обычных
-   * фраз. Не больше 100 запросов в час на аккаунт; в один запрос помещается
-   * до 1000 фраз.
+   * 0.01 ₽ за пачку до 4000 символов (около 150 фраз). До 1000 фраз за
+   * запрос, 100 запросов в час.
    */
   async direct(
     params: string | ReadonlyArray<string> | DirectParams,
@@ -223,25 +173,19 @@ export class JsonSeoClient {
     return this.http.json('direct', primary(params, 'phrases'), options);
   }
 
-  /**
-   * Страна, регион и координаты по IPv4-адресу. ID региона совпадает с ID
-   * региона Яндекса. Бесплатно, ключ обязателен.
-   */
+  /** Страна, регион и координаты по IPv4. Бесплатно, нужен ключ. */
   async geoip(params: string | GeoipParams, options?: RequestOptions): Promise<GeoipResponse> {
     return this.http.json('geoip', primary(params, 'ip'), options);
   }
 
-  /** Текущий баланс аккаунта. Бесплатно, ключ обязателен. */
+  /** Текущий баланс. Бесплатно, нужен ключ. */
   async balance(options?: RequestOptions): Promise<BalanceResponse> {
     return this.http.json('balance', {}, options);
   }
 
   // Запасной выход
 
-  /**
-   * Произвольный метод API — на случай, если в сервисе появился новый,
-   * а SDK ещё не обновлён.
-   */
+  /** Произвольный метод API — если в сервисе появился новый. */
   async call<T = unknown>(
     path: string,
     params: Record<string, ParamValue> = {},
@@ -256,11 +200,7 @@ export class JsonSeoClient {
   }
 }
 
-/**
- * Позволяет вызывать метод и одним запросом: `yandex('купить ноутбук')`
- * вместо `yandex({ text: 'купить ноутбук' })`, а `direct()` — сразу списком
- * фраз.
- */
+/** Даёт вызывать метод строкой или, для `direct()`, списком фраз. */
 function primary(
   params: string | ReadonlyArray<string> | Record<string, ParamValue>,
   key: string,

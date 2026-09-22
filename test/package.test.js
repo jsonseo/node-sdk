@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 import * as esm from '../dist/esm/index.js';
@@ -8,9 +8,8 @@ import * as esm from '../dist/esm/index.js';
 const require = createRequire(import.meta.url);
 
 /**
- * Пакет собирается дважды — в ESM и в CommonJS. Остальные тесты идут только
- * по ESM-сборке, поэтому половина упаковки оставалась бы непроверенной:
- * именно так недостающие типы для require доживают до публикации.
+ * Остальные тесты идут только по ESM-сборке, поэтому половина упаковки
+ * оставалась бы непроверенной.
  */
 describe('упаковка', () => {
   it('CommonJS-сборка грузится через require', () => {
@@ -49,10 +48,14 @@ describe('упаковка', () => {
   });
 
   it('в собранной библиотеке нет зависимостей от node:', () => {
-    for (const file of ['client.js', 'errors.js', 'http.js', 'index.js']) {
-      const source = readFileSync(new URL(`../dist/esm/${file}`, import.meta.url), 'utf8');
+    for (const build of ['esm', 'cjs']) {
+      const dir = new URL(`../dist/${build}/`, import.meta.url);
 
-      assert.ok(!source.includes('node:'), `${file} тянет node:-модуль и не пойдёт в браузере или воркере`);
+      for (const file of readdirSync(dir).filter((name) => name.endsWith('.js'))) {
+        const source = readFileSync(new URL(file, dir), 'utf8');
+
+        assert.ok(!source.includes('node:'), `${build}/${file} тянет node: и не пойдёт в браузере или воркере`);
+      }
     }
   });
 

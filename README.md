@@ -128,7 +128,7 @@ await client.yandex({ text: 'купить ноутбук', ai: true, ads: true }
 | Ошибка | Статус | Когда |
 | --- | --- | --- |
 | `ValidationError` | 422 | Параметры не приняты. `errors` — сообщения по полям, `fields` — их имена |
-| `UnauthorizedError` | 403 | Ключ не передан или недействителен |
+| `UnauthorizedError` | 403, 401 | Ключ не передан или недействителен |
 | `PaymentRequiredError` | 402 | На счёте не хватает средств |
 | `RateLimitError` | 429 | Превышен лимит частоты. `retryAfter` — через сколько секунд повторить |
 | `ServiceUnavailableError` | 503 | Выдачу получить не вышло. Деньги не списаны |

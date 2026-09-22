@@ -3,11 +3,8 @@ import assert from 'node:assert/strict';
 import { JsonSeoClient, UnauthorizedError, ValidationError } from '../dist/esm/index.js';
 
 /**
- * Проверка, что собранный пакет работает в конкретной среде выполнения.
- * Написана на общем для Node, Bun и Deno минимуме, поэтому запускается
- * в каждой из них одинаково: `node scripts/smoke.mjs`, `bun scripts/smoke.mjs`.
- *
- * Сеть не нужна: fetch подменяется.
+ * Проверка собранного пакета в конкретной среде: `node scripts/smoke.mjs`,
+ * `bun scripts/smoke.mjs`, `deno run scripts/smoke.mjs`. Сеть не нужна.
  */
 
 const calls = [];

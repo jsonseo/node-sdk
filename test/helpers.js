@@ -1,8 +1,4 @@
-/**
- * Заглушка fetch: отдаёт заранее сложенные ответы и запоминает, что у неё
- * просили. Позволяет проверять сборку запроса и разбор ответа, не обращаясь
- * к сети.
- */
+/** Заглушка fetch: отдаёт сложенные ответы и запоминает, что просили. */
 export function fakeFetch() {
   const queue = [];
 
@@ -27,7 +23,7 @@ export function fakeFetch() {
     }
 
     if (next === null) {
-      // Зависший запрос: отвечаем, только когда клиент сам оборвёт соединение.
+      // Зависший запрос: ответим, только когда клиент оборвёт соединение.
       return new Promise((resolve, reject) => {
         init.signal.addEventListener('abort', () => reject(new Error('The operation was aborted')), { once: true });
       });
@@ -56,7 +52,23 @@ export function fakeFetch() {
     return impl;
   };
 
-  /** Никогда не отвечает — нужен для проверки таймаута. */
+  /** Заголовки пришли, а тело читать нечем: обрыв на отдаче. */
+  impl.cut = () => {
+    queue.push(
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.error(new TypeError('соединение оборвано на середине тела'));
+          },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    );
+
+    return impl;
+  };
+
+  /** Никогда не отвечает: для проверки таймаута. */
   impl.hang = () => {
     queue.push(null);
 

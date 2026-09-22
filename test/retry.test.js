@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   AbortError,
+  IncompleteResponseError,
   JsonSeoClient,
   NetworkError,
   PaymentRequiredError,
@@ -34,10 +35,7 @@ describe('повторы', () => {
     assert.equal(http.calls.length, 2);
   });
 
-  /**
-   * Без Retry-After пауза берётся из собственного бэкоффа — случай с
-   * названным сроком проверяется отдельно.
-   */
+  /** Без Retry-After пауза берётся из бэкоффа. */
   it('лимит частоты повторяется', async () => {
     const http = fakeFetch().json({ message: 'Too Many Attempts.' }, 429).json({ results: [] });
 
@@ -158,6 +156,19 @@ describe('повторы', () => {
     });
   });
 
+  /** Обрыв на отдаче не повторяется: выдача уже собрана и оплачена. */
+  it('оборвавшееся тело не повторяется', async () => {
+    const http = fakeFetch().cut().json({ results: [] });
+
+    await assert.rejects(() => client(http).yandex('тест'), (error) => {
+      assert.ok(error instanceof IncompleteResponseError);
+      assert.ok(error instanceof NetworkError);
+
+      return true;
+    });
+    assert.equal(http.calls.length, 1);
+  });
+
   it('таймаут не повторяется: сервис уже считает оплаченный запрос', async () => {
     const http = fakeFetch().hang().json({ results: [] });
 
@@ -195,11 +206,7 @@ describe('отмена запроса', () => {
     );
   });
 
-  /**
-   * Пауза между попытками обязана прерываться сигналом: иначе отмена
-   * замечалась бы только на следующем витке, то есть через всю паузу
-   * целиком — до 30 секунд при значениях по умолчанию.
-   */
+  /** Иначе отмена замечалась бы только через всю паузу целиком. */
   it('отмена во время паузы между повторами срабатывает сразу', async () => {
     const http = fakeFetch()
       .json({ message: 'Too Many Attempts.' }, 429, { 'retry-after': '5' })

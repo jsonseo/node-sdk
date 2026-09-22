@@ -1,11 +1,7 @@
-/**
- * Значение, которое можно передать параметром метода. Массив склеивается
- * запятой (а список фраз — переводом строки), флаг превращается в 1 или 0,
- * null и undefined не отправляются вовсе.
- */
+/** Значение параметра: массив склеивается, флаг даёт 1/0, null не уедет. */
 export type ParamValue = string | number | boolean | ReadonlyArray<string | number> | null | undefined;
 
-/** Параметр-переключатель: API принимает и 1/0, и true/false. */
+/** Переключатель: API принимает и 1/0, и true/false. */
 export type Flag = boolean | 0 | 1;
 
 /** Устройство, с которого снимается выдача. */
@@ -35,7 +31,7 @@ export type ImageSize = 'large' | 'medium' | 'small';
 /** Ориентация картинки. Есть у всех трёх поисковиков. */
 export type ImageOrientation = 'horizontal' | 'vertical' | 'square';
 
-/** Цвет картинки: color — полноцветные, mono — чёрно-белые, остальное — преобладающий. */
+/** Цвет: color — полноцветные, mono — чёрно-белые, остальное — основной. */
 export type ImageColor =
   | 'color'
   | 'mono'
@@ -51,7 +47,7 @@ export type ImageColor =
   | 'pink'
   | 'brown';
 
-/** Тип изображения. transparent нет у Яндекса, demotivator есть только у него. */
+/** Тип изображения: transparent нет у Яндекса, demotivator есть только у него. */
 export type ImageType = 'photo' | 'clipart' | 'lineart' | 'face' | 'animated' | 'transparent' | 'demotivator';
 
 /** Формат файла. У Bing поддерживается только gif. */
@@ -63,10 +59,7 @@ export type Freshness = 'day' | 'week' | 'month' | 'year';
 /** Длительность ролика. Границы ступеней у каждого поисковика свои. */
 export type VideoDuration = 'short' | 'medium' | 'long';
 
-/**
- * Вид частотности Вордстата. Операторы расставляются на стороне сервиса —
- * фразу передавайте без кавычек.
- */
+/** Вид частотности: операторы расставит сервис, кавычки не нужны. */
 export type WordstatKind = 'base' | 'phrase' | 'exact' | 'superexact';
 
 /** Шаг динамики: month и week — история с 2018 года, day — последние 60 дней. */
