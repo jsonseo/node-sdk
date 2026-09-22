@@ -12,15 +12,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 18 — нижняя граница: с неё fetch есть без флагов.
-        node: ['18', '20', '22', '24']
+        # 18 — нижняя граница: с неё fetch есть без флагов. Дальше все
+        # живые ветки, включая текущую.
+        node: ['18', '20', '22', '24', '26']
 
     name: Node ${{ matrix.node }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
 
@@ -35,9 +36,9 @@ jobs:
     name: Bun
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
 
@@ -56,9 +57,9 @@ jobs:
     name: Deno
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
 
