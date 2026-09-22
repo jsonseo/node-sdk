@@ -1,0 +1,70 @@
+name: publish
+
+# Выпуск идёт от тега: сборка, проверки и отправка в npm без ручных шагов.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Публикация в npm
+    runs-on: ubuntu-latest
+
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/jsonseo
+
+    # Доверенная публикация: npm проверяет, что сборка пришла именно из
+    # этого репозитория и этого workflow. Токен не нужен и не хранится.
+    # Заодно к пакету прикладывается происхождение сборки.
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          # Доверенная публикация требует npm 11.5.1 и новее.
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          # В релизной сборке кеш не используем: пакет должен собираться
+          # из того, что лежит в репозитории, и ниоткуда больше.
+          package-manager-cache: false
+
+      # В Node вшита своя версия npm, и она может оказаться старее нужной.
+      - run: npm install -g npm@latest
+
+      # Тег и версия в package.json должны совпадать: иначе в npm уедет
+      # не та версия, а вернуть номер обратно нельзя.
+      - name: Сверить версию с тегом
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version=$(node -p "require('./package.json').version")
+          if [ "$tag" != "$version" ]; then
+            echo "тег $GITHUB_REF_NAME не совпадает с версией $version в package.json"
+            exit 1
+          fi
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npm run smoke
+
+      # Собранный пакет ставится в чистый проект и типизуется: битые типы
+      # иначе всплыли бы только у клиента, после публикации.
+      - run: npm run check:consumer
+
+      # Предрелиз (1.1.0-rc.1) не должен становиться latest: иначе его
+      # получат все, кто ставит пакет обычной командой.
+      - name: Публикация
+        run: |
+          case "$(node -p "require('./package.json').version")" in
+            *-*) npm publish --tag next ;;
+            *)   npm publish ;;
+          esac
