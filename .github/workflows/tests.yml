@@ -1,0 +1,74 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  node:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 18 — нижняя граница: с неё fetch есть без флагов.
+        node: ['18', '20', '22', '24']
+
+    name: Node ${{ matrix.node }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - run: npm install
+
+      - run: npm test
+
+      - run: npm run smoke
+
+  bun:
+    runs-on: ubuntu-latest
+    name: Bun
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: oven-sh/setup-bun@v2
+
+      # Сборку делает tsc, а проверку — сам Bun: так видно, что собранный
+      # пакет в нём работает, а не только устанавливается.
+      - run: npm install
+
+      - run: npm run build
+
+      - run: bun scripts/smoke.mjs
+
+  deno:
+    runs-on: ubuntu-latest
+    name: Deno
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - run: npm install
+
+      - run: npm run build
+
+      # Deno заявлен в README наравне с Node и Bun — значит, проверяется так же.
+      - run: deno run --allow-env scripts/smoke.mjs

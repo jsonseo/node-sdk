@@ -1,0 +1,63 @@
+{
+  "name": "jsonseo",
+  "version": "1.0.0",
+  "description": "Официальный SDK JSON SEO API: выдача Яндекса, Google и Bing, Вордстат, прогноз Директа и геолокация по IP",
+  "license": "MIT",
+  "homepage": "https://jsonseo.ru",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsonseo/node-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jsonseo/node-sdk/issues"
+  },
+  "keywords": [
+    "jsonseo",
+    "seo",
+    "serp",
+    "yandex",
+    "google",
+    "bing",
+    "wordstat",
+    "xmlriver",
+    "api"
+  ],
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      },
+      "default": "./dist/esm/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json && tsc -p tsconfig.cjs.json && node scripts/finish-build.mjs",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test test/client.test.js test/errors.test.js test/package.test.js test/params.test.js test/retry.test.js",
+    "smoke": "node scripts/smoke.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}
