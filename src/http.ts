@@ -67,7 +67,7 @@ const KNOWN_OPTIONS = {
 } satisfies Record<keyof ClientOptions, true>;
 
 const KNOWN_OPTION_NAMES = Object.keys(KNOWN_OPTIONS);
-const VERSION = '1.0.1';
+const VERSION = '1.0.2';
 
 /**
  * Транспорт: собирает запрос, разбирает ответ и решает, повторять ли отказ.

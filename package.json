@@ -1,6 +1,6 @@
 {
   "name": "jsonseo",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Официальный SDK JSON SEO API: выдача Яндекса, Google и Bing, Вордстат, прогноз Директа и геолокация по IP",
   "license": "MIT",
   "homepage": "https://jsonseo.ru",
